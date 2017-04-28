@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <!-- Set the viewport -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Set character encoding -->
+    <meta charset="utf-8">
+    <!-- Set title -->
+    <title>Service Worker Example</title>
+    <!-- Add stylesheet -->
+    <link href="styles/index.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <h1>Service Worker Example</h1>
+  
+    <a href="other.html">Other page</a>
+
+     <p>Open Devtools</p>
+    
+    <script>
+      (function() {
+        
+        'use strict';
+
+        // Serrvice Worker Registration 
+
+        if (!('serviceWorker' in navigator)) {
+          console.log('Service worker not supported');
+          return;
+        }
+
+        navigator.serviceWorker.register('service-worker.js')
+        .then(function(obj) {
+          console.log('Registered');
+          console.log(obj)
+        })
+        .catch(function(error) {
+          console.log('Registration failed:', error);
+        });
+      })();
+
+      /* The promise returned by register() resolves to the registration object, which contains the service worker's scope.
+        The default scope is the path to the service worker file, and extends to all lower directories. 
+        So a service worker in the root directory of an app controls requests from all files in the app.
+        Thus a service worker can be scoped to only work with specific resources (put inside another folder)*/
+
+      /* 
+        It is possible to set an arbitrary scope by passing in an additional parameter when registering,
+        for example: 
+
+        navigator.serviceWorker.register('/service-worker.js', {
+          scope: '/kittens/'
+        });
+        
+        The scope of the service worker is set to /kitten/
+        The service worker intercepts requests from pages in /kitten/ and /kitten/lower/ 
+        but not from pages like /kitten or /.
+
+      */
+    </script>
+
+  </body>
+</html>
