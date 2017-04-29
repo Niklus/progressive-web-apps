@@ -103,7 +103,6 @@ var app = (function() {
     })
     .then(validateResponse)
     .then(logSize)
-    .then(readResponseAsText)
     .then(logResult)
     .catch(logError);
   }
