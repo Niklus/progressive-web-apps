@@ -185,4 +185,15 @@ var app = (function() {
      <img> is, <img crossorigin> isn't.
 
   */
+  return {
+    readResponseAsJSON: (readResponseAsJSON),
+    readResponseAsBlob: (readResponseAsBlob),
+    readResponseAsText: (readResponseAsText),
+    validateResponse: (validateResponse),
+    fetchJSON: (fetchJSON),
+    fetchImage: (fetchImage),
+    fetchText: (fetchText),
+    headRequest: (headRequest),
+    postRequest: (postRequest)
+  };
 })();
