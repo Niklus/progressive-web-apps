@@ -185,8 +185,4 @@ var app = (function() {
      <img> is, <img crossorigin> isn't.
 
   */
-
-  // Don't worry if you don't understand this, it's not part of the Fetch API.
-  // We are using the JavaScript Module Pattern to enable unit testing of
-  // our functions.
 })();
