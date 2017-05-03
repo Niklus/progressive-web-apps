@@ -1,7 +1,6 @@
 # Promises: Async Code Simplified
 
-Promises offer a better way to handle asynchronous code in JavaScript
-Nested callbacks dont scale well and are hard to debug
+Promises offer a better way to handle asynchronous code in JavaScript. Nested callbacks dont scale well and are hard to debug
 
 ## Promise Terminology
 
