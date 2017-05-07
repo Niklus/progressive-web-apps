@@ -13,3 +13,9 @@ Client-side storage solution for structured data
 * Operation - An interaction with the database (add, get, put, delete, getAll. cursor)
 * Transaction - A wrapper around an operation, or group of operations, that ensures database integrity.
 * Cursor- A mechanism for iterating over multiple records in database.
+
+All data operations in IndexedDB are carried out inside a transaction. Each operation has this form:
+* Get database object
+* Open transaction on database
+* Open object store on transaction
+* Perform operation on object store

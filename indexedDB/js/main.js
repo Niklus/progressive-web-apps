@@ -19,7 +19,7 @@ var idbApp = (function() {
   // var dbPromise = idb.open('couches-n-things', 1);
 
   // Open a database and Create an object store
-  var dbPromise = idb.open('couches-n-things', 4, function(upgradeDb) {
+  var dbPromise = idb.open('couches-n-things', 1, function(upgradeDb) {
     
     switch (upgradeDb.oldVersion) {
     case 0:
@@ -38,8 +38,9 @@ var idbApp = (function() {
       var store = upgradeDb.transaction.objectStore('products');
       store.createIndex('price', 'price');
       store.createIndex('description', 'description');
-
-    // TODO 5.1 - create an 'orders' object store
+    case 4:
+      console.log('Creating the orders object store');
+      upgradeDb.createObjectStore('orders', {keyPath: 'id'});
   }
 });
 /*
@@ -55,8 +56,8 @@ var idbApp = (function() {
     2. Adding Items to an object store
   */
 
-  function getItems(){
-    return fetch('items/items.json')
+  function getItems(path){
+    return fetch(path)
     .then(function(res){
       return res.json();
     }).then(function(res){
@@ -67,7 +68,8 @@ var idbApp = (function() {
   }
 
   function addProducts() {
-    getItems().then(addToStore);
+    getItems('items/items.json')
+    .then(addToStore);
   }
 
   function addToStore(items){
@@ -90,19 +92,26 @@ var idbApp = (function() {
     The transaction rolls back any changes to the database if any of the operations fail. 
     This ensures the database is not left in a partially updated state.
   */
-  
 
+  /*
+    'readrite' transactions include:  put, add, or delete 
+    someObjectStore.add(data, optionalKey);
+    someObjectStore.put(data, optionalKey);
+    someObjectStore.delete(primaryKey);
+
+  */
+  
 
   /*
     3. Retrieve an item by its properties
   */
   
   // By ID
-  function getById(key) {
+  function getById(primKey) {
     return dbPromise.then(function(db) {
       var tx = db.transaction('products', 'readonly');
       var store = tx.objectStore('products');
-      return store.get(key); // Retrieved diectly from store keypath: id
+      return store.get(primKey);
     });
   }
   
@@ -115,7 +124,6 @@ var idbApp = (function() {
       return index.get(key);
     });
   }
-
 
   function displayByName() {
     var key = document.getElementById('name').value; 
@@ -210,30 +218,59 @@ var idbApp = (function() {
   */
 
 
-
+  //add items to the 'orders' object store
   function addOrders() {
-
-    // TODO 5.2 - add items to the 'orders' object store
-
+    getItems('items/orders.json')
+    .then(function(items){
+      dbPromise.then(function(db) {  
+        var tx = db.transaction('orders', 'readwrite');
+        var store = tx.objectStore('orders');   
+        items.forEach(function(item) {
+          console.log('Adding item: ', item);
+          store.add(item);
+        });
+        return tx.complete;
+      }).then(function() {
+        console.log('All items added successfully!');
+      }).catch(function(e) {
+        console.log('Error adding items: ', e);
+      });
+    });
   }
 
   function showOrders() {
     var s = '';
     dbPromise.then(function(db) {
+      var tx = db.transaction('orders', 'readonly');
+      var store = tx.objectStore('orders');
+      return store.openCursor();
+    }).then(function showRange(cursor) {
+      if (!cursor) {return;}
+      console.log('Cursored at:', cursor.value.name);
 
-      // TODO 5.3 - use a cursor to display the orders on the page
+      s += '<h2>' + cursor.value.name + '</h2><p>';
+      for (var field in cursor.value) {
+        s += field + '=' + cursor.value[field] + '<br/>';
+      }
+      s += '</p>';
 
+      return cursor.continue().then(showRange);
     }).then(function() {
       if (s === '') {s = '<p>No results.</p>';}
       document.getElementById('orders').innerHTML = s;
     });
   }
+  
 
   function getOrders() {
-
-    // TODO 5.4 - get all objects from 'orders' object store
-
+    return dbPromise.then(function(db) {
+      var tx = db.transaction('orders');
+      var store = tx.objectStore('orders');
+      return store.getAll()
+    });
   }
+
+  /*From HERE*/
 
   function fulfillOrders() {
     getOrders().then(function(orders) {
@@ -245,8 +282,17 @@ var idbApp = (function() {
 
   function processOrders(orders) {
 
-    // TODO 5.5 - get items in the 'products' store matching the orders
-
+    return dbPromise.then(function(db) {
+      var tx = db.transaction('products');
+      var store = tx.objectStore('products');
+      return Promise.all(
+        orders.map(function(order) {
+          return store.get(order.id).then(function(product) {
+            return decrementQuantity(product, order);
+          });
+        })
+      );
+    });
   }
 
   function decrementQuantity(product, order) {
@@ -280,17 +326,6 @@ var idbApp = (function() {
     fulfillOrders: (fulfillOrders),
     processOrders: (processOrders),
     decrementQuantity: (decrementQuantity),
-    updateProductsStore: (updateProductsStore),
-    getById: (getById)
+    updateProductsStore: (updateProductsStore)
   };
 })();
-
-
-/*
-  //Test
-
-  idbApp.getById('cch-blk-ma')
-  .then(function(res){
-    console.log(res)
-  })
-*/
