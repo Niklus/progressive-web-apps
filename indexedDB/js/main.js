@@ -281,7 +281,6 @@ var idbApp = (function() {
   }
 
   function processOrders(orders) {
-
     return dbPromise.then(function(db) {
       var tx = db.transaction('products');
       var store = tx.objectStore('products');
@@ -296,16 +295,28 @@ var idbApp = (function() {
   }
 
   function decrementQuantity(product, order) {
-
-    // TODO 5.6 - check the quantity of remaining products
-
+    return new Promise(function(resolve, reject) {
+      var item = product;
+      var qtyRemaining = item.quantity - order.quantity;
+      if (qtyRemaining < 0) {
+        console.log('Not enough ' + product.id + ' left in stock!');
+        document.getElementById('receipt').innerHTML =
+        '<h3>Not enough ' + product.id + ' left in stock!</h3>';
+        throw 'Out of stock!';
+      }
+      item.quantity = qtyRemaining;
+      resolve(item);
+    });
   }
 
   function updateProductsStore(products) {
     dbPromise.then(function(db) {
-
-      // TODO 5.7 - update the items in the 'products' object store
-
+      var tx = db.transaction('products', 'readwrite');
+      var store = tx.objectStore('products');
+      products.forEach(function(item) {
+        store.put(item);
+      });
+      return tx.complete;
     }).then(function() {
       console.log('Orders processed successfully!');
       document.getElementById('receipt').innerHTML =
